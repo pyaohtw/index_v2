@@ -3,6 +3,7 @@ import pandas as pd
 import datetime
 
 # Streamlit app layout
+st.title("Index Assigner")
 st.write("""
     This app is designed to help you assign i7 and i5 indices to your samples in a 96-well format.
     The process involves selecting wells and generating matrices based on your selection. 
