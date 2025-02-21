@@ -3,7 +3,6 @@ import pandas as pd
 import datetime
 
 # Streamlit app layout
-st.title("Index Assigner")
 st.write("""
     This app is designed to help you assign i7 and i5 indices to your samples in a 96-well format.
     The process involves selecting wells and generating matrices based on your selection. 
@@ -142,7 +141,10 @@ st.subheader("Select i7 Column and i5 Row")
 i7_col = st.selectbox("Select i7 Column", list(range(1, 13)))
 i5_row = st.selectbox("Select i5 Row", list("ABCDEFGH"))
 
-# Horizontal output
+# Prefix input box
+prefix = st.text_input("Enter a prefix for Sample_ID (optional)", value="")
+
+# Generate horizontal output
 output_data = []
 for i in range(8):
     for j in range(12):
@@ -152,51 +154,46 @@ for i in range(8):
             i5_data = index_df.loc[index_df['index'] == i5_value, ['i5-name', 'i5-index']].values[0]
             i7_value = f"{chr(65 + i)}{i7_col}"
             i7_data = index_df.loc[index_df['index'] == i7_value, ['i7-name', 'i7-index']].values[0]
-            output_data.append({"Well": well, "i7-name": i7_data[0], "i7-index": i7_data[1], "i5-name": i5_data[0], "i5-index": i5_data[1]})
+            
+            # Apply prefix
+            sample_id = f"{prefix}{well}" if prefix else well
+            
+            output_data.append({"Sample_ID": sample_id, "Sample_name": "", "i7-name": i7_data[0], "i7-index": i7_data[1], "i5-name": i5_data[0], "i5-index": i5_data[1]})
 
-# Vertical output
+# Generate vertical output
 vertical_output_data = []
-rows = [f"{chr(65 + r)}{c + 1}" for c in range(12) for r in range(8)]  # All wells in vertical format
-
+rows = [f"{chr(65 + r)}{c + 1}" for c in range(12) for r in range(8)]
 for well in rows:
-    if well in selected_data and well not in st.session_state.removal_wells:  # Skip removed wells
+    if well in selected_data and well not in st.session_state.removal_wells:
         well_row = well[0]
         well_number = int(well[1:])
-        
-        # Fetch i5 value and i7 value (same logic as before)
         i5_value = f"{i5_row}{well_number}"
         i5_row_data = index_df.loc[index_df['index'] == i5_value, ['i5-name', 'i5-index']].values[0]
-        
         i7_value = f"{well_row}{i7_col}"
         i7_row_data = index_df.loc[index_df['index'] == i7_value, ['i7-name', 'i7-index']].values[0]
         
-        # Add to the vertical output data
+        # Apply prefix
+        sample_id = f"{prefix}{well}" if prefix else well
+        
         vertical_output_data.append({
-            "Well": well,
+            "Sample_ID": sample_id,
+            "Sample_name": "",
             "i7-name": i7_row_data[0],
             "i7-index": i7_row_data[1],
             "i5-name": i5_row_data[0],
             "i5-index": i5_row_data[1]
         })
 
-# Convert output data to DataFrame
-timestamp = datetime.datetime.now().strftime("%D_%M%S")
+# Convert to DataFrame
+timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
 output_df = pd.DataFrame(output_data)
 vertical_output_df = pd.DataFrame(vertical_output_data)
 
-# Add download button for horizontal output CSV
+# Download buttons
 st.download_button("Download Horizontal Output as CSV", data=output_df.to_csv(index=False), file_name=f"horizontal_output_{timestamp}.csv", mime="text/csv")
 st.write("### Horizontal Output →")
 st.dataframe(output_df)
 
-# Add download button for vertical output CSV
-st.download_button(
-    label="Download Vertical Output as CSV",
-    data=vertical_output_df.to_csv(index=False),
-    file_name=f"vertical_output_{timestamp}.csv",
-    mime="text/csv"
-)
-
-# Display the vertical output data frame
+st.download_button("Download Vertical Output as CSV", data=vertical_output_df.to_csv(index=False), file_name=f"vertical_output_{timestamp}.csv", mime="text/csv")
 st.write("### Vertical Output ↓")
 st.dataframe(vertical_output_df)
