@@ -13,9 +13,6 @@ st.write("Select two wells to define a range, and generate a matrix between thos
 st.write("Your selected data matrix is displayed in the sidebar. If you don't see the full matrix, adjust the sidebar's size or position for optimal viewing.")
 st.write("If you mis-clicked, refresh the page to start over and select a new pair of wells.")
 
-# Load the index data from the CSV file
-index_df = pd.read_csv('index.csv')
-
 # Create a sample dataframe for well structure (8 rows x 12 columns)
 data = [[f'{chr(65 + row)}{col + 1}' for col in range(12)] for row in range(8)]
 df = pd.DataFrame(data, columns=[f'A{i + 1}' for i in range(12)])
@@ -135,6 +132,22 @@ with st.sidebar:
 
     # Render the final matrix with color and highlights applied
     st.markdown(f'<div id="matrix-container">{final_matrix.to_html(escape=False, index=False, header=False)}</div>', unsafe_allow_html=True)
+
+# Select index file to use
+st.subheader("Select Index File")
+
+# Radio button to choose index file
+use_reverse_complement = st.radio(
+    "Use reverse complement i7 index file?",
+    ("No", "Yes"),
+    index=0  # Default to "No"
+)
+
+# Load the appropriate index file based on selection
+index_file = 'index-i7-RC.csv' if use_reverse_complement == "Yes" else 'index.csv'
+index_df = pd.read_csv(index_file)
+
+st.write(f"Using index file: `{index_file}`")
 
 # i7/i5 selection
 st.subheader("Select i7 Column and i5 Row")
